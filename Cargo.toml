@@ -1,0 +1,15 @@
+[package]
+name = "sha2_hasher"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+const-hex = { version = "1" }
+sha2 = { version = "0.11.0-pre" }
+
+[features]
+default = ["sha256"]
+sha224 = []
+sha256 = []
+sha384 = []
+sha512 = []
