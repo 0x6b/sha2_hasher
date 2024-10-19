@@ -1,5 +1,5 @@
 use std::{
-    future::Future,
+    fs::read,
     io::{
         Error,
         ErrorKind::{InvalidInput, NotFound},
@@ -17,55 +17,53 @@ use sha2::Sha256;
 use sha2::Sha384;
 #[cfg(feature = "sha512")]
 use sha2::Sha512;
-#[cfg(feature = "async")]
-use tokio::fs::read;
 
 pub trait Sha2Hasher {
     /// Hashes with the SHA-224 algorithm.
     #[cfg(feature = "sha224")]
-    fn sha224(&self) -> impl Future<Output = Result<String, Error>> + Send;
+    fn sha224(&self) -> Result<String, Error>;
 
     /// Hashes with the SHA-256 algorithm.
     #[cfg(feature = "sha256")]
-    fn sha256(&self) -> impl Future<Output = Result<String, Error>> + Send;
+    fn sha256(&self) -> Result<String, Error>;
 
     /// Hashes with the SHA-384 algorithm.
     #[cfg(feature = "sha384")]
-    fn sha384(&self) -> impl Future<Output = Result<String, Error>> + Send;
+    fn sha384(&self) -> Result<String, Error>;
 
     /// Hashes with the SHA-512 algorithm.
     #[cfg(feature = "sha512")]
-    fn sha512(&self) -> impl Future<Output = Result<String, Error>> + Send;
+    fn sha512(&self) -> Result<String, Error>;
 }
 
 /// Implement the `Sha2Hasher` trait for any type that can be converted to a `Path`.
 impl<P> Sha2Hasher for P
 where
-    P: AsRef<Path> + Sync,
+    P: AsRef<Path>,
 {
     #[cfg(feature = "sha224")]
-    async fn sha224(&self) -> Result<String, Error> {
-        hash_file::<Sha224, _>(self).await
+    fn sha224(&self) -> Result<String, Error> {
+        hash_file::<Sha224, _>(self)
     }
 
     #[cfg(feature = "sha256")]
-    async fn sha256(&self) -> Result<String, Error> {
-        hash_file::<Sha256, _>(self).await
+    fn sha256(&self) -> Result<String, Error> {
+        hash_file::<Sha256, _>(self)
     }
 
     #[cfg(feature = "sha384")]
-    async fn sha384(&self) -> Result<String, Error> {
-        hash_file::<Sha384, _>(self).await
+    fn sha384(&self) -> Result<String, Error> {
+        hash_file::<Sha384, _>(self)
     }
 
     #[cfg(feature = "sha512")]
-    async fn sha512(&self) -> Result<String, Error> {
-        hash_file::<Sha512, _>(self).await
+    fn sha512(&self) -> Result<String, Error> {
+        hash_file::<Sha512, _>(self)
     }
 }
 
 #[inline]
-async fn hash_file<D, P>(path: P) -> Result<String, Error>
+fn hash_file<D, P>(path: P) -> Result<String, Error>
 where
     D: Digest,
     P: AsRef<Path>,
@@ -79,6 +77,6 @@ where
     }
 
     let mut hasher = D::new();
-    hasher.update(read(path).await?);
+    hasher.update(read(path)?);
     Ok(hasher.finalize().encode_hex())
 }
