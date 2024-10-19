@@ -1,24 +1,18 @@
-#![doc = include_str!("../README.md")]
-
-#[cfg(feature = "async")]
 mod sha2_hasher;
-#[cfg(feature = "async")]
-pub use sha2_hasher::Sha2Hasher;
 
-#[cfg(feature = "sync")]
-pub mod sync;
+pub use sha2_hasher::Sha2Hasher;
 
 #[cfg(test)]
 mod tests {
     use std::path::Path;
 
-    use crate::sha2_hasher::Sha2Hasher;
+    use crate::sync::Sha2Hasher;
 
     macro_rules! test {
         ($hash:ident, $expected:expr) => {
-            #[tokio::test]
-            async fn $hash() {
-                let hash = Path::new(".gitignore").$hash().await.unwrap();
+            #[test]
+            fn $hash() {
+                let hash = Path::new(".gitignore").$hash().unwrap();
                 assert_eq!(hash, $expected);
             }
         };

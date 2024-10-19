@@ -6,9 +6,15 @@ edition = "2021"
 [dependencies]
 const-hex = { version = "1" }
 sha2 = { version = "0.11.0-pre" }
+tokio = { version = "1.40", features = ["fs"], optional = true }
+
+[dev-dependencies]
+tokio = { version = "1.40", features = ["fs", "macros", "rt"] }
 
 [features]
-default = ["sha256"]
+default = ["sha256", "async"]
+async = ["dep:tokio"]
+sync = []
 sha224 = []
 sha256 = []
 sha384 = []
