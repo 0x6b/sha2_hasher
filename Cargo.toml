@@ -5,11 +5,11 @@ edition = "2021"
 
 [dependencies]
 const-hex = { version = "1" }
-sha2 = { version = "0.11.0-pre" }
-tokio = { version = "1.40", features = ["fs"], optional = true }
+sha2 = { version = "0.11.0-rc.3" }
+tokio = { version = "1.49", features = ["fs"], optional = true }
 
 [dev-dependencies]
-tokio = { version = "1.40", features = ["fs", "macros", "rt"] }
+tokio = { version = "1.49", features = ["fs", "macros", "rt"] }
 
 [features]
 default = ["sha256", "async"]
