@@ -19,15 +19,7 @@ use std::{
 };
 
 use const_hex::ToHexExt;
-use sha2::Digest;
-#[cfg(feature = "sha224")]
-use sha2::Sha224;
-#[cfg(feature = "sha256")]
-use sha2::Sha256;
-#[cfg(feature = "sha384")]
-use sha2::Sha384;
-#[cfg(feature = "sha512")]
-use sha2::Sha512;
+use sha2::{Digest, Sha224, Sha256, Sha384, Sha512};
 
 #[cfg(feature = "sync")]
 use std::fs::read;
@@ -37,38 +29,30 @@ use tokio::fs::read;
 #[cfg(feature = "sync")]
 pub trait Sha2Hasher {
     /// Hashes with the SHA-224 algorithm.
-    #[cfg(feature = "sha224")]
     fn sha224(&self) -> Result<String, Error>;
 
     /// Hashes with the SHA-256 algorithm.
-    #[cfg(feature = "sha256")]
     fn sha256(&self) -> Result<String, Error>;
 
     /// Hashes with the SHA-384 algorithm.
-    #[cfg(feature = "sha384")]
     fn sha384(&self) -> Result<String, Error>;
 
     /// Hashes with the SHA-512 algorithm.
-    #[cfg(feature = "sha512")]
     fn sha512(&self) -> Result<String, Error>;
 }
 
 #[cfg(feature = "async")]
 pub trait Sha2Hasher {
     /// Hashes with the SHA-224 algorithm.
-    #[cfg(feature = "sha224")]
     fn sha224(&self) -> impl Future<Output = Result<String, Error>> + Send;
 
     /// Hashes with the SHA-256 algorithm.
-    #[cfg(feature = "sha256")]
     fn sha256(&self) -> impl Future<Output = Result<String, Error>> + Send;
 
     /// Hashes with the SHA-384 algorithm.
-    #[cfg(feature = "sha384")]
     fn sha384(&self) -> impl Future<Output = Result<String, Error>> + Send;
 
     /// Hashes with the SHA-512 algorithm.
-    #[cfg(feature = "sha512")]
     fn sha512(&self) -> impl Future<Output = Result<String, Error>> + Send;
 }
 
@@ -78,22 +62,18 @@ impl<P> Sha2Hasher for P
 where
     P: AsRef<Path>,
 {
-    #[cfg(feature = "sha224")]
     fn sha224(&self) -> Result<String, Error> {
         hash_file::<Sha224, _>(self)
     }
 
-    #[cfg(feature = "sha256")]
     fn sha256(&self) -> Result<String, Error> {
         hash_file::<Sha256, _>(self)
     }
 
-    #[cfg(feature = "sha384")]
     fn sha384(&self) -> Result<String, Error> {
         hash_file::<Sha384, _>(self)
     }
 
-    #[cfg(feature = "sha512")]
     fn sha512(&self) -> Result<String, Error> {
         hash_file::<Sha512, _>(self)
     }
@@ -105,22 +85,18 @@ impl<P> Sha2Hasher for P
 where
     P: AsRef<Path> + Sync,
 {
-    #[cfg(feature = "sha224")]
     async fn sha224(&self) -> Result<String, Error> {
         hash_file::<Sha224, _>(self).await
     }
 
-    #[cfg(feature = "sha256")]
     async fn sha256(&self) -> Result<String, Error> {
         hash_file::<Sha256, _>(self).await
     }
 
-    #[cfg(feature = "sha384")]
     async fn sha384(&self) -> Result<String, Error> {
         hash_file::<Sha384, _>(self).await
     }
 
-    #[cfg(feature = "sha512")]
     async fn sha512(&self) -> Result<String, Error> {
         hash_file::<Sha512, _>(self).await
     }
@@ -172,24 +148,29 @@ mod sync_tests {
 
     use crate::Sha2Hasher;
 
-    macro_rules! test {
-        ($hash:ident, $expected:expr) => {
-            #[test]
-            fn $hash() {
-                let hash = Path::new(".gitignore").$hash().unwrap();
-                assert_eq!(hash, $expected);
-            }
-        };
+    #[test]
+    fn sha224() {
+        let hash = Path::new(".gitignore").sha224().unwrap();
+        assert_eq!(hash, "e7f68a0e088b02bded91142bb43538b0338ead063a1bdf1d158ef174");
     }
 
-    #[cfg(feature = "sha224")]
-    test!(sha224, "e7f68a0e088b02bded91142bb43538b0338ead063a1bdf1d158ef174");
-    #[cfg(feature = "sha256")]
-    test!(sha256, "44c92e3a70ad3307b7056871c2bdb096d8bfa9373f5bf06a79bb6324a20ff2fb");
-    #[cfg(feature = "sha384")]
-    test!(sha384, "16c6a6c5fb77fb778b0739b93005a54bf4d5d011ecfc151d1d28680df65829fb25e4f639d12ea5bd0d95fb15a02a9d46");
-    #[cfg(feature = "sha512")]
-    test!(sha512, "cce95db66253cee0b4543434b0a93382fdd876996f0783709144d7317cc1686b97f907a4f18da2bdf95461b140129eb93242a842b3eee0878973ac139482db54");
+    #[test]
+    fn sha256() {
+        let hash = Path::new(".gitignore").sha256().unwrap();
+        assert_eq!(hash, "44c92e3a70ad3307b7056871c2bdb096d8bfa9373f5bf06a79bb6324a20ff2fb");
+    }
+
+    #[test]
+    fn sha384() {
+        let hash = Path::new(".gitignore").sha384().unwrap();
+        assert_eq!(hash, "16c6a6c5fb77fb778b0739b93005a54bf4d5d011ecfc151d1d28680df65829fb25e4f639d12ea5bd0d95fb15a02a9d46");
+    }
+
+    #[test]
+    fn sha512() {
+        let hash = Path::new(".gitignore").sha512().unwrap();
+        assert_eq!(hash, "cce95db66253cee0b4543434b0a93382fdd876996f0783709144d7317cc1686b97f907a4f18da2bdf95461b140129eb93242a842b3eee0878973ac139482db54");
+    }
 }
 
 #[cfg(all(test, feature = "async"))]
@@ -198,22 +179,27 @@ mod async_tests {
 
     use crate::Sha2Hasher;
 
-    macro_rules! test {
-        ($hash:ident, $expected:expr) => {
-            #[tokio::test]
-            async fn $hash() {
-                let hash = Path::new(".gitignore").$hash().await.unwrap();
-                assert_eq!(hash, $expected);
-            }
-        };
+    #[tokio::test]
+    async fn sha224() {
+        let hash = Path::new(".gitignore").sha224().await.unwrap();
+        assert_eq!(hash, "e7f68a0e088b02bded91142bb43538b0338ead063a1bdf1d158ef174");
     }
 
-    #[cfg(feature = "sha224")]
-    test!(sha224, "e7f68a0e088b02bded91142bb43538b0338ead063a1bdf1d158ef174");
-    #[cfg(feature = "sha256")]
-    test!(sha256, "44c92e3a70ad3307b7056871c2bdb096d8bfa9373f5bf06a79bb6324a20ff2fb");
-    #[cfg(feature = "sha384")]
-    test!(sha384, "16c6a6c5fb77fb778b0739b93005a54bf4d5d011ecfc151d1d28680df65829fb25e4f639d12ea5bd0d95fb15a02a9d46");
-    #[cfg(feature = "sha512")]
-    test!(sha512, "cce95db66253cee0b4543434b0a93382fdd876996f0783709144d7317cc1686b97f907a4f18da2bdf95461b140129eb93242a842b3eee0878973ac139482db54");
+    #[tokio::test]
+    async fn sha256() {
+        let hash = Path::new(".gitignore").sha256().await.unwrap();
+        assert_eq!(hash, "44c92e3a70ad3307b7056871c2bdb096d8bfa9373f5bf06a79bb6324a20ff2fb");
+    }
+
+    #[tokio::test]
+    async fn sha384() {
+        let hash = Path::new(".gitignore").sha384().await.unwrap();
+        assert_eq!(hash, "16c6a6c5fb77fb778b0739b93005a54bf4d5d011ecfc151d1d28680df65829fb25e4f639d12ea5bd0d95fb15a02a9d46");
+    }
+
+    #[tokio::test]
+    async fn sha512() {
+        let hash = Path::new(".gitignore").sha512().await.unwrap();
+        assert_eq!(hash, "cce95db66253cee0b4543434b0a93382fdd876996f0783709144d7317cc1686b97f907a4f18da2bdf95461b140129eb93242a842b3eee0878973ac139482db54");
+    }
 }

@@ -6,23 +6,17 @@ I found myself repeatedly writing code to hash files using the SHA256, so I wrot
 
 ## Crate Features
 
-The following crate features are available:
-
 - `async`: Enables the async implementation.
 - `sync`: Enables the sync implementation.
-- `sha224`: Enables the `sha224` method.
-- `sha256`: Enables the `sha256` method.
-- `sha384`: Enables the `sha384` method.
-- `sha512`: Enables the `sha512` method.
 
-Note: `async` and `sync` features are mutually exclusive. No features are enabled by default.
+Note: `async` and `sync` features are mutually exclusive. One must be enabled.
 
 ## Usage
 
 ### Async
 
 ```rust,ignore
-// Enable with: --features "async,sha256"
+// Enable with: --features async
 use sha2_hasher::Sha2Hasher;
 
 #[tokio::main(flavor = "current_thread")]
@@ -35,7 +29,7 @@ async fn main() {
 ### Sync
 
 ```rust,ignore
-// Enable with: --features "sync,sha256"
+// Enable with: --features sync
 use sha2_hasher::Sha2Hasher;
 
 fn main() {
