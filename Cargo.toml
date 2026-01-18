@@ -12,7 +12,7 @@ tokio = { version = "1.49", features = ["fs"], optional = true }
 tokio = { version = "1.49", features = ["fs", "macros", "rt"] }
 
 [features]
-default = ["sha256", "async"]
+default = []
 async = ["dep:tokio"]
 sync = []
 sha224 = []
