@@ -29,9 +29,6 @@ compile_error!(
     "Features `async` and `sync` are mutually exclusive. Please enable only one of them."
 );
 
-#[cfg(not(any(feature = "async", feature = "sync")))]
-compile_error!("Either `async` or `sync` feature must be enabled.");
-
 #[cfg(feature = "async")]
 mod r#async;
 #[cfg(feature = "async")]
