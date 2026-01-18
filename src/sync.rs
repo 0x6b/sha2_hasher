@@ -8,55 +8,38 @@ use std::{
 };
 
 use const_hex::ToHexExt;
-use sha2::Digest;
-#[cfg(feature = "sha224")]
-use sha2::Sha224;
-#[cfg(feature = "sha256")]
-use sha2::Sha256;
-#[cfg(feature = "sha384")]
-use sha2::Sha384;
-#[cfg(feature = "sha512")]
-use sha2::Sha512;
+use sha2::{Digest, Sha224, Sha256, Sha384, Sha512};
 
 pub trait Sha2Hasher {
     /// Hashes with the SHA-224 algorithm.
-    #[cfg(feature = "sha224")]
     fn sha224(&self) -> Result<String, Error>;
 
     /// Hashes with the SHA-256 algorithm.
-    #[cfg(feature = "sha256")]
     fn sha256(&self) -> Result<String, Error>;
 
     /// Hashes with the SHA-384 algorithm.
-    #[cfg(feature = "sha384")]
     fn sha384(&self) -> Result<String, Error>;
 
     /// Hashes with the SHA-512 algorithm.
-    #[cfg(feature = "sha512")]
     fn sha512(&self) -> Result<String, Error>;
 }
 
-/// Implement the `Sha2Hasher` trait for any type that can be converted to a `Path`.
 impl<P> Sha2Hasher for P
 where
     P: AsRef<Path>,
 {
-    #[cfg(feature = "sha224")]
     fn sha224(&self) -> Result<String, Error> {
         hash_file::<Sha224, _>(self)
     }
 
-    #[cfg(feature = "sha256")]
     fn sha256(&self) -> Result<String, Error> {
         hash_file::<Sha256, _>(self)
     }
 
-    #[cfg(feature = "sha384")]
     fn sha384(&self) -> Result<String, Error> {
         hash_file::<Sha384, _>(self)
     }
 
-    #[cfg(feature = "sha512")]
     fn sha512(&self) -> Result<String, Error> {
         hash_file::<Sha512, _>(self)
     }
@@ -79,4 +62,43 @@ where
     let mut hasher = D::new();
     hasher.update(read(path)?);
     Ok(hasher.finalize().encode_hex())
+}
+
+#[cfg(test)]
+mod tests {
+    use std::path::Path;
+
+    use crate::Sha2Hasher;
+
+    const TEST_FILE: &str = "tests/data/test.txt";
+
+    #[test]
+    fn sha224() {
+        let hash = Path::new(TEST_FILE).sha224().unwrap();
+        assert_eq!(hash, "c547cf5d6bf6b795abbe4c5cc7cac00f1d5ec17bcd74281ea89e6108");
+    }
+
+    #[test]
+    fn sha256() {
+        let hash = Path::new(TEST_FILE).sha256().unwrap();
+        assert_eq!(hash, "c98c24b677eff44860afea6f493bbaec5bb1c4cbb209c6fc2bbb47f66ff2ad31");
+    }
+
+    #[test]
+    fn sha384() {
+        let hash = Path::new(TEST_FILE).sha384().unwrap();
+        assert_eq!(
+            hash,
+            "d195483c9b554356ba50a855a605aaee134612dcfdd05988fc605181d93603f215a0d07812a0b333fc2ccc75025736f5"
+        );
+    }
+
+    #[test]
+    fn sha512() {
+        let hash = Path::new(TEST_FILE).sha512().unwrap();
+        assert_eq!(
+            hash,
+            "921618bc6d9f8059437c5e0397b13f973ab7c7a7b81f0ca31b70bf448fd800a460b67efda0020088bc97bf7d9da97a9e2ce7b20d46e066462ec44cf60284f9a7"
+        );
+    }
 }

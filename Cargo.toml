@@ -1,21 +1,26 @@
 [package]
 name = "sha2_hasher"
 version = "0.2.0"
-edition = "2021"
+edition = "2024"
+authors = ["kaoru <k@warpnine.io>"]
+license = "MIT"
+description = "A trait extension for hashing files with SHA-2 algorithms"
+homepage = "https://github.com/0x6b/sha2_hasher"
+repository = "https://github.com/0x6b/sha2_hasher"
+documentation = "https://docs.rs/sha2_hasher"
+readme = "README.md"
+keywords = ["sha2", "sha256", "hash", "file", "digest"]
+exclude = ["tests/"]
 
 [dependencies]
 const-hex = { version = "1" }
-sha2 = { version = "0.11.0-pre" }
-tokio = { version = "1.40", features = ["fs"], optional = true }
+sha2 = { version = "0.11.0-rc.3" }
+tokio = { version = "1.49", features = ["fs"], optional = true }
 
 [dev-dependencies]
-tokio = { version = "1.40", features = ["fs", "macros", "rt"] }
+tokio = { version = "1.49", features = ["fs", "macros", "rt"] }
 
 [features]
-default = ["sha256", "async"]
+default = []
 async = ["dep:tokio"]
 sync = []
-sha224 = []
-sha256 = []
-sha384 = []
-sha512 = []
