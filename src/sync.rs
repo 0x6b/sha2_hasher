@@ -1,14 +1,13 @@
 use std::{
-    fs::read,
-    io::{
-        Error,
-        ErrorKind::{InvalidInput, NotFound},
-    },
+    fs::File,
+    io::{BufReader, Error, Read},
     path::Path,
 };
 
 use const_hex::ToHexExt;
 use sha2::{Digest, Sha224, Sha256, Sha384, Sha512};
+
+const BUFFER_SIZE: usize = 64 * 1024;
 
 pub trait Sha2Hasher {
     /// Hashes with the SHA-224 algorithm.
@@ -52,23 +51,37 @@ where
     P: AsRef<Path>,
 {
     let path = path.as_ref();
-    if !path.is_file() {
-        return Err(Error::new(
-            if path.exists() { InvalidInput } else { NotFound },
-            "Invalid path: must be an existing and accessible file",
-        ));
+    let mut reader = BufReader::new(File::open(path)?);
+    let mut hasher = D::new();
+    let mut buffer = [0; BUFFER_SIZE];
+
+    loop {
+        let bytes_read = reader.read(&mut buffer)?;
+        if bytes_read == 0 {
+            break;
+        }
+        hasher.update(&buffer[..bytes_read]);
     }
 
-    let mut hasher = D::new();
-    hasher.update(read(path)?);
     Ok(hasher.finalize().encode_hex())
 }
 
 #[cfg(test)]
 mod tests {
+    #[cfg(test)]
+    use std::env::temp_dir;
+    #[cfg(test)]
+    use std::fs::remove_file;
+    #[cfg(test)]
+    use std::fs::write;
     use std::path::Path;
+    #[cfg(test)]
+    use std::process::id;
 
-    use crate::Sha2Hasher;
+    use const_hex::ToHexExt;
+    use sha2::{Digest, Sha256};
+
+    use super::Sha2Hasher;
 
     const TEST_FILE: &str = "tests/data/test.txt";
 
@@ -100,5 +113,18 @@ mod tests {
             hash,
             "921618bc6d9f8059437c5e0397b13f973ab7c7a7b81f0ca31b70bf448fd800a460b67efda0020088bc97bf7d9da97a9e2ce7b20d46e066462ec44cf60284f9a7"
         );
+    }
+
+    #[test]
+    fn hashes_files_larger_than_the_buffer() {
+        let contents = vec![0xa5; 128 * 1024 + 17];
+        let expected: String = Sha256::digest(&contents).encode_hex();
+        let path = temp_dir().join(format!("sha2_hasher_sync_streaming_{}", id()));
+        write(&path, contents).unwrap();
+
+        let hash = path.sha256().unwrap();
+        remove_file(path).unwrap();
+
+        assert_eq!(hash, expected);
     }
 }

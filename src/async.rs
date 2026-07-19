@@ -1,15 +1,13 @@
-use std::{
-    future::Future,
-    io::{
-        Error,
-        ErrorKind::{InvalidInput, NotFound},
-    },
-    path::Path,
-};
+use std::{future::Future, io::Error, path::Path};
 
 use const_hex::ToHexExt;
 use sha2::{Digest, Sha224, Sha256, Sha384, Sha512};
-use tokio::fs::read;
+use tokio::{
+    fs::File,
+    io::{AsyncReadExt, BufReader},
+};
+
+const BUFFER_SIZE: usize = 64 * 1024;
 
 pub trait Sha2Hasher {
     /// Hashes with the SHA-224 algorithm.
@@ -53,23 +51,37 @@ where
     P: AsRef<Path>,
 {
     let path = path.as_ref();
-    if !path.is_file() {
-        return Err(Error::new(
-            if path.exists() { InvalidInput } else { NotFound },
-            "Invalid path: must be an existing and accessible file",
-        ));
+    let mut reader = BufReader::new(File::open(path).await?);
+    let mut hasher = D::new();
+    let mut buffer = [0; BUFFER_SIZE];
+
+    loop {
+        let bytes_read = reader.read(&mut buffer).await?;
+        if bytes_read == 0 {
+            break;
+        }
+        hasher.update(&buffer[..bytes_read]);
     }
 
-    let mut hasher = D::new();
-    hasher.update(read(path).await?);
     Ok(hasher.finalize().encode_hex())
 }
 
 #[cfg(test)]
 mod tests {
+    #[cfg(test)]
+    use std::env::temp_dir;
     use std::path::Path;
+    #[cfg(test)]
+    use std::process::id;
 
-    use crate::Sha2Hasher;
+    use const_hex::ToHexExt;
+    use sha2::{Digest, Sha256};
+    #[cfg(test)]
+    use tokio::fs::remove_file;
+    #[cfg(test)]
+    use tokio::fs::write;
+
+    use super::Sha2Hasher;
 
     const TEST_FILE: &str = "tests/data/test.txt";
 
@@ -101,5 +113,18 @@ mod tests {
             hash,
             "921618bc6d9f8059437c5e0397b13f973ab7c7a7b81f0ca31b70bf448fd800a460b67efda0020088bc97bf7d9da97a9e2ce7b20d46e066462ec44cf60284f9a7"
         );
+    }
+
+    #[tokio::test]
+    async fn hashes_files_larger_than_the_buffer() {
+        let contents = vec![0xa5; 128 * 1024 + 17];
+        let expected: String = Sha256::digest(&contents).encode_hex();
+        let path = temp_dir().join(format!("sha2_hasher_async_streaming_{}", id()));
+        write(&path, contents).await.unwrap();
+
+        let hash = path.sha256().await.unwrap();
+        remove_file(path).await.unwrap();
+
+        assert_eq!(hash, expected);
     }
 }

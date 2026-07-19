@@ -9,7 +9,8 @@ I found myself repeatedly writing code to hash files using the SHA256, so I wrot
 - `async`: Enables the async implementation.
 - `sync`: Enables the sync implementation.
 
-Note: `async` and `sync` features are mutually exclusive. One must be enabled.
+At least one implementation feature must be enabled. When both are enabled, the async trait is
+available at the crate root and the sync trait is available as `sha2_hasher::sync::Sha2Hasher`.
 
 ## Usage
 

@@ -1,6 +1,6 @@
 [package]
 name = "sha2_hasher"
-version = "0.3.2"
+version = "0.4.0"
 edition = "2024"
 authors = ["kaoru <k@warpnine.io>"]
 license = "MIT"
@@ -15,7 +15,7 @@ exclude = ["tests/"]
 [dependencies]
 const-hex = { version = "1" }
 sha2 = { version = "0.11.0-rc.3" }
-tokio = { version = "1.49", features = ["fs"], optional = true }
+tokio = { version = "1.49", features = ["fs", "io-util"], optional = true }
 
 [dev-dependencies]
 tokio = { version = "1.49", features = ["fs", "macros", "rt"] }
