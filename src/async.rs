@@ -1,8 +1,4 @@
-use std::{
-    future::Future,
-    io::Error,
-    path::Path,
-};
+use std::{future::Future, io::Error, path::Path};
 
 use const_hex::ToHexExt;
 use sha2::{Digest, Sha224, Sha256, Sha384, Sha512};
@@ -72,11 +68,20 @@ where
 
 #[cfg(test)]
 mod tests {
+    #[cfg(test)]
+    use std::env::temp_dir;
     use std::path::Path;
+    #[cfg(test)]
+    use std::process::id;
 
-    use super::Sha2Hasher;
     use const_hex::ToHexExt;
     use sha2::{Digest, Sha256};
+    #[cfg(test)]
+    use tokio::fs::remove_file;
+    #[cfg(test)]
+    use tokio::fs::write;
+
+    use super::Sha2Hasher;
 
     const TEST_FILE: &str = "tests/data/test.txt";
 
@@ -114,14 +119,11 @@ mod tests {
     async fn hashes_files_larger_than_the_buffer() {
         let contents = vec![0xa5; 128 * 1024 + 17];
         let expected: String = Sha256::digest(&contents).encode_hex();
-        let path = std::env::temp_dir().join(format!(
-            "sha2_hasher_async_streaming_{}",
-            std::process::id()
-        ));
-        tokio::fs::write(&path, contents).await.unwrap();
+        let path = temp_dir().join(format!("sha2_hasher_async_streaming_{}", id()));
+        write(&path, contents).await.unwrap();
 
         let hash = path.sha256().await.unwrap();
-        tokio::fs::remove_file(path).await.unwrap();
+        remove_file(path).await.unwrap();
 
         assert_eq!(hash, expected);
     }

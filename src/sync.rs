@@ -68,11 +68,20 @@ where
 
 #[cfg(test)]
 mod tests {
+    #[cfg(test)]
+    use std::env::temp_dir;
+    #[cfg(test)]
+    use std::fs::remove_file;
+    #[cfg(test)]
+    use std::fs::write;
     use std::path::Path;
+    #[cfg(test)]
+    use std::process::id;
 
-    use super::Sha2Hasher;
     use const_hex::ToHexExt;
     use sha2::{Digest, Sha256};
+
+    use super::Sha2Hasher;
 
     const TEST_FILE: &str = "tests/data/test.txt";
 
@@ -110,14 +119,11 @@ mod tests {
     fn hashes_files_larger_than_the_buffer() {
         let contents = vec![0xa5; 128 * 1024 + 17];
         let expected: String = Sha256::digest(&contents).encode_hex();
-        let path = std::env::temp_dir().join(format!(
-            "sha2_hasher_sync_streaming_{}",
-            std::process::id()
-        ));
-        std::fs::write(&path, contents).unwrap();
+        let path = temp_dir().join(format!("sha2_hasher_sync_streaming_{}", id()));
+        write(&path, contents).unwrap();
 
         let hash = path.sha256().unwrap();
-        std::fs::remove_file(path).unwrap();
+        remove_file(path).unwrap();
 
         assert_eq!(hash, expected);
     }
