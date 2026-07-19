@@ -1,9 +1,6 @@
 use std::{
     fs::read,
-    io::{
-        Error,
-        ErrorKind::{InvalidInput, NotFound},
-    },
+    io::Error,
     path::Path,
 };
 
@@ -52,13 +49,6 @@ where
     P: AsRef<Path>,
 {
     let path = path.as_ref();
-    if !path.is_file() {
-        return Err(Error::new(
-            if path.exists() { InvalidInput } else { NotFound },
-            "Invalid path: must be an existing and accessible file",
-        ));
-    }
-
     let mut hasher = D::new();
     hasher.update(read(path)?);
     Ok(hasher.finalize().encode_hex())
