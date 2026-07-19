@@ -70,7 +70,7 @@ where
 mod tests {
     use std::path::Path;
 
-    use crate::Sha2Hasher;
+    use super::Sha2Hasher;
     use const_hex::ToHexExt;
     use sha2::{Digest, Sha256};
 

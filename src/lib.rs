@@ -5,12 +5,13 @@
 //!
 //! # Features
 //!
-//! One of the following features must be enabled:
+//! At least one of the following features must be enabled:
 //!
 //! - `async` - Async implementation using tokio
 //! - `sync` - Blocking implementation
 //!
-//! These features are mutually exclusive.
+//! When both are enabled, the async trait is exported at the crate root and the blocking trait is
+//! available as `sync::Sha2Hasher`.
 //!
 //! # Example
 #![cfg_attr(feature = "async", doc = "```no_run")]
@@ -24,17 +25,12 @@
 //! # }
 //! ```
 
-#[cfg(all(feature = "async", feature = "sync"))]
-compile_error!(
-    "Features `async` and `sync` are mutually exclusive. Please enable only one of them."
-);
-
 #[cfg(feature = "async")]
 mod r#async;
 #[cfg(feature = "async")]
 pub use r#async::Sha2Hasher;
 
 #[cfg(feature = "sync")]
-mod sync;
-#[cfg(feature = "sync")]
+pub mod sync;
+#[cfg(all(feature = "sync", not(feature = "async")))]
 pub use sync::Sha2Hasher;
